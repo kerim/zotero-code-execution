@@ -1,0 +1,28 @@
+# Zotero Code Execution Library Dependencies
+#
+# These dependencies should already be installed if you have
+# zotero-mcp installed via pipx.
+#
+# To install manually:
+#   pip install -r requirements.txt
+
+# Core Zotero API client
+pyzotero>=1.5.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Document conversion
+markitdown>=0.0.1
+
+# Vector database for semantic search
+chromadb>=0.4.0
+
+# Sentence embeddings
+sentence-transformers>=2.2.0
+
+# Optional: OpenAI for advanced embeddings
+# openai>=1.0.0
+
+# Optional: Google Generative AI
+# google-genai>=0.1.0
