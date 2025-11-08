@@ -26,6 +26,26 @@ print(format_results(results))
 - ✅ Ranks by relevance
 - ✅ Keeps large datasets in code (no crashes)
 
+### Multi-Term Searches
+
+For OR-style searches (e.g., multiple spellings or languages), search each term separately and merge:
+
+```python
+# Search for "Atayal" OR "泰雅族"
+all_results = {}
+
+for term in ['Atayal', '泰雅族']:
+    results = orchestrator.comprehensive_search(term, max_results=50)
+    for item in results:
+        all_results[item.key] = item  # Deduplicate by key
+
+# Re-rank combined results
+ranked = orchestrator._rank_items(list(all_results.values()), 'Atayal 泰雅族')
+print(format_results(ranked[:25]))
+```
+
+**Why?** Zotero treats multi-word queries as AND conditions. Searching "Atayal 泰雅族" finds items matching BOTH terms, not either term.
+
 ## Why This Exists
 
 ### The Problem

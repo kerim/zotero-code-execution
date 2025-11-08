@@ -114,10 +114,10 @@ class ZoteroLibrary:
 
         # Initialize semantic search if available
         try:
-            self.semantic_search = create_semantic_search(self.config_path)
+            self._semantic_search_engine = create_semantic_search(self.config_path)
         except Exception as e:
             print(f"Warning: Semantic search not available: {e}")
-            self.semantic_search = None
+            self._semantic_search_engine = None
 
     def search_items(
         self,
@@ -153,8 +153,7 @@ class ZoteroLibrary:
     def semantic_search(
         self,
         query: str,
-        limit: int = 100,
-        search_type: Literal["hybrid", "vector", "keyword"] = "hybrid"
+        limit: int = 100
     ) -> List[ZoteroItem]:
         """
         Perform semantic search on Zotero library.
@@ -162,18 +161,16 @@ class ZoteroLibrary:
         Args:
             query: Natural language query
             limit: Maximum results
-            search_type: Type of search to perform
 
         Returns:
             List of ZoteroItem objects
         """
-        if not self.semantic_search:
+        if not self._semantic_search_engine:
             raise RuntimeError("Semantic search not initialized")
 
-        results = self.semantic_search.search(
+        results = self._semantic_search_engine.search(
             query,
-            n_results=limit,
-            search_type=search_type
+            limit=limit
         )
 
         # Convert results to ZoteroItem objects
@@ -221,7 +218,8 @@ class ZoteroLibrary:
             List of tag names
         """
         tags = self.zot.tags()
-        return [tag.get("tag", "") for tag in tags]
+        # tags() returns a list of strings directly
+        return tags if isinstance(tags, list) else []
 
     def get_recent(self, limit: int = 50) -> List[ZoteroItem]:
         """
@@ -285,22 +283,12 @@ class SearchOrchestrator:
         """
         all_items: Set[ZoteroItem] = set()
 
-        # Strategy 1: Semantic search with variations
-        if use_semantic and self.library.semantic_search:
+        # Strategy 1: Semantic search
+        if use_semantic and self.library._semantic_search_engine:
             try:
-                # Original query
                 items = self.library.semantic_search(
                     query,
-                    limit=search_limit_per_strategy,
-                    search_type="hybrid"
-                )
-                all_items.update(items)
-
-                # Try vector-only for conceptual matches
-                items = self.library.semantic_search(
-                    query,
-                    limit=search_limit_per_strategy,
-                    search_type="vector"
+                    limit=search_limit_per_strategy
                 )
                 all_items.update(items)
             except Exception as e:
