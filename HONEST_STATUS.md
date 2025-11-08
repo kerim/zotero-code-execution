@@ -132,16 +132,23 @@ The following implementation bugs were found and fixed during end-to-end testing
 - **Issue:** Called `search(n_results=X, search_type=Y)` but actual API is `search(limit=X)`
 - **Fix:** Updated to use correct parameter name, removed unsupported `search_type` parameter
 
+### 4. Wrong Result Structure in `semantic_search()`
+- **Issue:** Code tried to iterate over `results.get("items", [])` but semantic search returns `results["results"]`
+- **Reality:** Each result already contains full `zotero_item` data, no need to fetch separately
+- **Fix:** Changed to iterate over `results.get("results", [])` and use included `zotero_item` data
+- **Impact:** Was returning 0 results and generating 404 errors trying to fetch non-existent items
+
 ## Validation Checklist
 
 - [x] Fix SOCKS proxy issue (workaround: use clean environment with `env -i`)
 - [x] Fix Python version mismatch (solution: use python3.13 explicitly)
-- [x] Fix code bugs (semantic_search, get_tags, parameter names)
+- [x] Fix code bugs (semantic_search name collision, get_tags, parameter names, result structure)
 - [x] Run real searches successfully
 - [x] Measure actual token usage (794 vs 2,372 = 67% reduction)
 - [x] Test multi-language searches (Atayal + 泰雅族)
 - [x] Verify deduplication works (35 unique from 36 total)
 - [x] Verify ranking works (proper relevance sorting)
+- [x] Verify semantic search works (fixed 2025-01-08)
 - [x] Update documentation with real measurements
 
 ## Bottom Line
@@ -156,10 +163,11 @@ The following implementation bugs were found and fixed during end-to-end testing
 
 **Confidence Levels:**
 - Architecture is sound: **Confirmed** ✅ Follows Anthropic pattern, works in practice
-- Code works: **Confirmed** ✅ Bugs fixed, tested end-to-end with real data
+- Code works: **Confirmed** ✅ All bugs fixed, tested end-to-end with real data
 - Token reduction: **Measured** ✅ 67% reduction (794 vs 2,372 tokens)
 - Deduplication: **Confirmed** ✅ Works correctly with real data
 - Ranking: **Confirmed** ✅ Properly sorts by relevance
+- Semantic search: **Confirmed** ✅ Fixed and tested (2025-01-08)
 
 **Known Limitation:**
 Multi-term OR searches require calling `comprehensive_search()` once per term and merging results manually. Single-query multi-word searches are treated as AND conditions by Zotero.

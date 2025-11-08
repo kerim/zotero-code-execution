@@ -174,13 +174,13 @@ class ZoteroLibrary:
         )
 
         # Convert results to ZoteroItem objects
+        # Semantic search returns results["results"], not results["items"]
+        # Each result already contains the full zotero_item data
         items = []
-        for result in results.get("items", []):
-            item_key = result.get("key")
-            if item_key:
-                # Fetch full item data
-                item = self.zot.item(item_key)
-                items.append(ZoteroItem.from_raw(item))
+        for result in results.get("results", []):
+            zotero_item = result.get("zotero_item")
+            if zotero_item:
+                items.append(ZoteroItem.from_raw(zotero_item))
 
         return items
 
