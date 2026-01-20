@@ -6,6 +6,17 @@
 
 A Python library for [Zotero MCP](https://github.com/zotero/zotero-mcp) that implements [Anthropic's code execution pattern](https://www.anthropic.com/engineering/code-execution-with-mcp) to enable safe, comprehensive searches without context overflow or crashes.
 
+## Skill Installation
+
+### For Claude Code
+
+1. Clone or download this repository
+2. Copy the `skill/` folder to your Claude Code skills directory:
+   ```bash
+   cp -r skill ~/.claude/skills/zotero-mcp-code
+   ```
+3. Restart Claude Code to load the skill
+
 ## Quick Start
 
 ```python
