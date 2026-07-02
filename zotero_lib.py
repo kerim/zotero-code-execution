@@ -26,6 +26,17 @@ from zotero_mcp.utils import format_creators
 from pathlib import Path
 
 
+# Item types that are containers/children, not bibliographic works. Standalone
+# notes are top-level, so top() alone doesn't exclude them — filter in code.
+_NON_BIBLIO_TYPES = {"note", "attachment", "annotation"}
+
+
+def _real_items(results) -> List['ZoteroItem']:
+    """Convert raw API results to ZoteroItems, dropping notes/attachments/annotations."""
+    items = [ZoteroItem.from_raw(item) for item in results]
+    return [i for i in items if i.item_type not in _NON_BIBLIO_TYPES]
+
+
 @dataclass
 class ZoteroItem:
     """Simplified representation of a Zotero item for easier manipulation."""
@@ -147,8 +158,10 @@ class ZoteroLibrary:
             limit=limit,
             tag=tag or []
         )
-        results = self.zot.items()
-        return [ZoteroItem.from_raw(item) for item in results]
+        # top() = top-level items only: excludes child notes/attachments/annotations,
+        # which have no title and polluted results via items() (local API verified).
+        results = self.zot.top()
+        return _real_items(results)
 
     def semantic_search(
         self,
@@ -182,7 +195,9 @@ class ZoteroLibrary:
             if zotero_item:
                 items.append(ZoteroItem.from_raw(zotero_item))
 
-        return items
+        # The index embeds annotation/note chunks too; drop them so results
+        # are bibliographic works only (consistent with keyword search).
+        return [i for i in items if i.item_type not in _NON_BIBLIO_TYPES]
 
     def search_by_tag(
         self,
@@ -207,8 +222,9 @@ class ZoteroLibrary:
             itemType=item_type,
             limit=limit
         )
-        results = self.zot.items()
-        return [ZoteroItem.from_raw(item) for item in results]
+        # top() excludes child notes/attachments/annotations (see search_items)
+        results = self.zot.top()
+        return _real_items(results)
 
     def get_tags(self) -> List[str]:
         """
@@ -232,8 +248,9 @@ class ZoteroLibrary:
             List of ZoteroItem objects
         """
         self.zot.add_parameters(limit=limit, sort="dateAdded", direction="desc")
-        results = self.zot.items()
-        return [ZoteroItem.from_raw(item) for item in results]
+        # top() excludes child notes/attachments/annotations (see search_items)
+        results = self.zot.top()
+        return _real_items(results)
 
 
 class SearchOrchestrator:
